@@ -1,0 +1,43 @@
+{
+    "name": "annotation/routing",
+    "description": "Use PHP 8 attributes to register routes in a Laravel Application.",
+    "keywords": [
+        "route",
+        "routing",
+        "laravel",
+        "attribute"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "homepage": "https://github.com/dependencies-packagist/routing",
+    "authors": [
+        {
+            "name": "jundayw",
+            "email": "jundayw@126.com"
+        }
+    ],
+    "require": {
+        "php": "^8.0",
+        "annotation/route": "1.x-dev"
+    },
+    "autoload": {
+        "psr-4": {
+            "Annotation\\Routing\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.x-dev"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
