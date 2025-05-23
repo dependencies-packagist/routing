@@ -25,6 +25,9 @@
             "Annotation\\Routing\\": "src/"
         }
     },
+    "provide": {
+        "annotation/route-implementation": "1.x-dev"
+    },
     "autoload-dev": {
         "psr-4": {
             "Tests\\": "tests/"
