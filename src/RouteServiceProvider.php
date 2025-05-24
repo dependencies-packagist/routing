@@ -2,6 +2,8 @@
 
 namespace Annotation\Routing;
 
+use Annotation\Routing\Facades\Route;
+use Annotation\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 
 class RouteServiceProvider extends ServiceProvider
@@ -32,9 +34,17 @@ class RouteServiceProvider extends ServiceProvider
 
     protected function registerRoutes(): void
     {
+        $this->app->bind(RouteRegistrar::class, function () {
+            return new RouteRegistrar(app('router'));
+        });
+
+        \Illuminate\Routing\Router::mixin(new Router);
+
         if (!$this->shouldRegisterRoutes()) {
             return;
         }
+
+        Route::directories($this->getRouteDirectories());
     }
 
     private function shouldRegisterRoutes(): bool
