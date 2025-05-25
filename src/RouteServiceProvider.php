@@ -3,7 +3,7 @@
 namespace Annotation\Routing;
 
 use Annotation\Routing\Facades\Route;
-use Annotation\Routing\Router;
+use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 
 class RouteServiceProvider extends ServiceProvider
@@ -34,11 +34,15 @@ class RouteServiceProvider extends ServiceProvider
 
     protected function registerRoutes(): void
     {
-        $this->app->bind(RouteRegistrar::class, function () {
-            return new RouteRegistrar(app('router'));
-        });
+        $this->app->bind(RouteRegistrar::class, fn() => tap(
+            new RouteRegistrar(app('router')),
+            fn(RouteRegistrar $routeRegistrar) => $routeRegistrar
+                ->useBasePath(app()->basePath())
+                ->useRootNamespace(app()->getNamespace())
+                ->useMiddleware($this->getRouteMiddlewares())
+        ));
 
-        \Illuminate\Routing\Router::mixin(new Router);
+        Router::mixin(new Routing);
 
         if (!$this->shouldRegisterRoutes()) {
             return;
@@ -62,6 +66,11 @@ class RouteServiceProvider extends ServiceProvider
 
     private function getRouteDirectories(): array
     {
-        return config('routing.directories');
+        return config('routing.directories', []);
+    }
+
+    private function getRouteMiddlewares(): array
+    {
+        return config('routing.middleware', []);
     }
 }
