@@ -26,7 +26,7 @@ return [
     'directories' => [
         app_path('Http/Controllers'),
         // app_path('Http/Controllers/Backend') => [
-        //     'prefix'       => 'backwend',
+        //     'prefix'       => 'backend',
         //     'middleware'   => 'web',
         //     // only register routes in files that match the patterns
         //     'patterns'     => ['*Controller.php'],
