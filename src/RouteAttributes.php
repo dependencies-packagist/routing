@@ -19,7 +19,7 @@ use ReflectionClass;
 class RouteAttributes
 {
     public function __construct(
-        private ReflectionClass $class,
+        private readonly ReflectionClass $class,
     )
     {
         //
