@@ -25,16 +25,14 @@ return [
 
     'directories' => [
         app_path('Http/Controllers'),
-        /*
-        app_path('Http/Controllers/Api') => [
-           'prefix' => 'api',
-           'middleware' => 'api',
-            // only register routes in files that match the patterns
-           'patterns' => ['*Controller.php'],
-           // do not register routes in files that match the patterns
-           'not_patterns' => [],
-        ],
-        */
+        // app_path('Http/Controllers/Backend') => [
+        //     'prefix'       => 'backwend',
+        //     'middleware'   => 'web',
+        //     // only register routes in files that match the patterns
+        //     'patterns'     => ['*Controller.php'],
+        //     // do not register routes in files that match the patterns
+        //     'not_patterns' => [],
+        // ],
     ],
 
     /*
