@@ -37,7 +37,7 @@ class RouteServiceProvider extends ServiceProvider
         $this->app->bind(RouteRegistrar::class, fn() => tap(
             new RouteRegistrar(app('router')),
             fn(RouteRegistrar $routeRegistrar) => $routeRegistrar
-                ->useBasePath(app()->basePath())
+                ->useBasePath(app()->path())
                 ->useRootNamespace(app()->getNamespace())
                 ->useMiddleware($this->getRouteMiddlewares())
         ));
