@@ -4,7 +4,7 @@ namespace Annotation\Routing;
 
 use Closure;
 
-class Router
+class Routing
 {
     public function directories(): Closure
     {
