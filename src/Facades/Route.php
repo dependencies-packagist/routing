@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route as Facade;
 /**
  * @method static void directories(array $directories)
  *
- * @see \Annotation\Routing\Router
+ * @see \Annotation\Routing\Routing
  * @see \Illuminate\Routing\Router
  */
 class Route extends Facade
