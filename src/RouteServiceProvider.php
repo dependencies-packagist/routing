@@ -40,6 +40,7 @@ class RouteServiceProvider extends ServiceProvider
                 ->useBasePath(app()->path())
                 ->useRootNamespace(app()->getNamespace())
                 ->useMiddleware($this->getRouteMiddlewares())
+                ->useWithoutMiddleware($this->getRouteExcludedMiddlewares())
         ));
 
         Router::mixin(new Routing);
@@ -72,5 +73,10 @@ class RouteServiceProvider extends ServiceProvider
     private function getRouteMiddlewares(): array
     {
         return config('routing.middleware', []);
+    }
+
+    private function getRouteExcludedMiddlewares(): array
+    {
+        return config('routing.excluded_middleware', []);
     }
 }
