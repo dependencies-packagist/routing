@@ -2,6 +2,7 @@
 
 namespace Annotation\Routing;
 
+use Annotation\Route\Contracts\ResourceContract;
 use Annotation\Route\Contracts\RoutingContract;
 use Annotation\Route\Domain;
 use Annotation\Route\Group;
@@ -11,8 +12,11 @@ use Annotation\Route\Resource;
 use Annotation\Route\Routing\Config;
 use Annotation\Route\Routing\Defaults;
 use Annotation\Route\ScopeBindings;
+use Annotation\Route\Singleton;
 use Annotation\Route\Where;
+use Annotation\Route\WithoutMiddleware;
 use Annotation\Route\WithTrashed;
+use Illuminate\Support\Str;
 use ReflectionAttribute;
 use ReflectionClass;
 
@@ -27,187 +31,220 @@ class RouteAttributes
 
     public function prefix(): ?string
     {
-        if (!$attribute = $this->getAttribute(Prefix::class)) {
-            return null;
-        }
-
-        return $attribute->prefix;
+        return $this->getAttribute(Prefix::class, static fn(Prefix $attribute) => $attribute->prefix);
     }
 
     public function domain(): ?string
     {
-        if (!$attribute = $this->getAttribute(Domain::class)) {
-            return null;
-        }
-
-        return $attribute->domain;
+        return $this->getAttribute(Domain::class, static fn(Domain $attribute) => $attribute->domain);
     }
 
     public function fromConfig(): ?string
     {
-        if (!$attribute = $this->getAttribute(Config::class)) {
-            return null;
-        }
-
-        return config($attribute->key, $attribute->value);
+        return $this->getAttribute(Config::class, static fn(Config $attribute) => config($attribute->key, $attribute->value));
     }
 
     public function groups(): array
     {
-        $groups = [];
-
-        $attributes = $this->class->getAttributes(Group::class, ReflectionAttribute::IS_INSTANCEOF);
-
-        if (count($attributes) > 0) {
-            foreach ($attributes as $attribute) {
-                $attributeClass = $attribute->newInstance();
-                $groups[]       = array_filter([
-                    'domain' => $attributeClass->domain,
-                    'prefix' => $attributeClass->prefix,
-                    'where'  => $attributeClass->where,
-                    'as'     => $attributeClass->as,
-                ]);
-            }
-        } else {
-            $groups[] = array_filter([
-                'domain' => $this->fromConfig() ?? $this->domain(),
-                'prefix' => $this->prefix(),
+        return $this->getAttribute(Group::class, function (Group $attribute, mixed $groups = []) {
+            $group    = array_filter([
+                'domain' => $attribute->domain,
+                'prefix' => $attribute->prefix ? trim("{$this->prefix()}/{$attribute->prefix}") : null,
+                'where'  => $attribute->where,
+                'as'     => $attribute->as,
             ]);
-        }
+            $groups[] = array_merge($this->getDefaultGroupAttribute(), $group);
+            return $groups;
+        }, [$this->getDefaultGroupAttribute()]);
+    }
 
-        return $groups;
+    public function getDefaultGroupAttribute(): array
+    {
+        $as = Str::of($this->class->getNamespaceName())
+            ->explode('\\')
+            ->slice(3)
+            ->push(Str::replaceLast('Controller', '', $this->class->getShortName()))
+            ->map(static fn($segment) => Str::kebab($segment));
+        return array_filter([
+            'domain' => $this->fromConfig() ?? $this->domain(),
+            'prefix' => $this->prefix() ?? $as->implode('/'),
+            'as'     => $as->push('')->implode('.'),
+        ]);
+    }
+
+    public function isResourceContract(): bool
+    {
+        return $this->getAttribute(
+            ResourceContract::class,
+            static fn(ResourceContract $attribute) => property_exists($attribute, 'resource') || property_exists($attribute, 'singleton')
+        ) ?? false;
+    }
+
+    public function isResource(): bool
+    {
+        return $this->getAttribute(
+            Resource::class,
+            static fn(Resource $attribute) => property_exists($attribute, 'resource')
+        ) ?? false;
+    }
+
+    public function isSingleton(): bool
+    {
+        return $this->getAttribute(
+            Singleton::class,
+            static fn(Singleton $attribute) => property_exists($attribute, 'singleton')
+        ) ?? false;
     }
 
     public function resource(): ?string
     {
-        if (!$attribute = $this->getAttribute(Resource::class)) {
-            return null;
-        }
-
-        return $attribute->resource;
-    }
-
-    public function parameters(): array|string|null
-    {
-        if (!$attribute = $this->getAttribute(Resource::class)) {
-            return null;
-        }
-
-        return $attribute->parameters;
+        return $this->getAttribute(Resource::class, static fn(Resource $attribute) => $attribute->resource);
     }
 
     public function shallow(): bool|null
     {
-        if (!$attribute = $this->getAttribute(Resource::class)) {
-            return null;
-        }
-
-        return $attribute->shallow;
+        return $this->getAttribute(Resource::class, static fn(Resource $attribute) => $attribute->shallow);
     }
 
     public function apiResource(): ?string
     {
-        if (!$attribute = $this->getAttribute(Resource::class)) {
-            return null;
-        }
+        return $this->getAttribute(Resource::class, static fn(Resource $attribute) => $attribute->apiResource);
+    }
 
-        return $attribute->apiResource;
+    public function singleton(): ?string
+    {
+        return $this->getAttribute(Singleton::class, static fn(Singleton $attribute) => $attribute->singleton);
+    }
+
+    public function creatable(): bool|null
+    {
+        return $this->getAttribute(Singleton::class, static fn(Singleton $attribute) => $attribute->creatable);
+    }
+
+    public function destroyable(): bool|null
+    {
+        return $this->getAttribute(Singleton::class, static fn(Singleton $attribute) => $attribute->destroyable);
+    }
+
+    public function apiSingleton(): ?string
+    {
+        return $this->getAttribute(Singleton::class, static fn(Singleton $attribute) => $attribute->apiSingleton);
+    }
+
+    public function parameters(): array|string|null
+    {
+        return $this->getAttribute(
+            [Resource::class, Singleton::class],
+            static fn(Resource|Singleton $attribute) => $attribute->parameters
+        );
     }
 
     public function except(): string|array|null
     {
-        if (!$attribute = $this->getAttribute(Resource::class)) {
-            return null;
-        }
-
-        return $attribute->except;
+        return $this->getAttribute(
+            [Resource::class, Singleton::class],
+            static fn(Resource|Singleton $attribute) => $attribute->except
+        );
     }
 
     public function only(): string|array|null
     {
-        if (!$attribute = $this->getAttribute(Resource::class)) {
-            return null;
-        }
-
-        return $attribute->only;
+        return $this->getAttribute(
+            [Resource::class, Singleton::class],
+            static fn(Resource|Singleton $attribute) => $attribute->only
+        );
     }
 
     public function names(): string|array|null
     {
-        if (!$attribute = $this->getAttribute(Resource::class)) {
-            return null;
-        }
-
-        return $attribute->names;
+        return $this->getAttribute(
+            [Resource::class, Singleton::class],
+            static fn(Resource|Singleton $attribute) => $attribute->names
+        );
     }
 
     public function middleware(): array
     {
-        if (!$attribute = $this->getAttribute(Middleware::class)) {
-            return [];
-        }
-
-        return $attribute->middleware;
+        return $this->getAttribute(
+            Middleware::class,
+            static fn(Middleware $attribute) => $attribute->middleware
+        ) ?? [];
     }
 
-    public function scopeBindings(): ?bool
+    public function withoutMiddleware(): array
     {
-        if (!$attribute = $this->getAttribute(ScopeBindings::class)) {
-            return config('routing.scope-bindings');
-        }
-
-        return $attribute->scopeBindings;
+        return $this->getAttribute(
+            WithoutMiddleware::class,
+            static fn(WithoutMiddleware $attribute) => $attribute->withoutMiddleware
+        ) ?? [];
     }
 
     public function wheres(): array
     {
-        $wheres     = [];
-        $attributes = $this->class->getAttributes(Where::class, ReflectionAttribute::IS_INSTANCEOF);
-
-        foreach ($attributes as $attribute) {
-            $attributeClass                 = $attribute->newInstance();
-            $wheres[$attributeClass->param] = $attributeClass->constraint;
-        }
-
-        return $wheres;
+        return $this->getAttribute(
+            Where::class,
+            static fn(Where $attribute, mixed $wheres = []) => array_merge($wheres, [
+                $attribute->param => $attribute->constraint,
+            ])
+        ) ?? [];
     }
 
     public function defaults(): array
     {
-        $defaults   = [];
-        $attributes = $this->class->getAttributes(Defaults::class, ReflectionAttribute::IS_INSTANCEOF);
+        return $this->getAttribute(
+            Defaults::class,
+            static fn(Defaults $attribute, mixed $defaults = []) => array_merge($defaults, [
+                $attribute->key => $attribute->value,
+            ])
+        ) ?? [];
+    }
 
-        foreach ($attributes as $attribute) {
-            $attributeClass                 = $attribute->newInstance();
-            $defaults[$attributeClass->key] = $attributeClass->value;
-        }
-
-        return $defaults;
+    public function scopeBindings(): ?bool
+    {
+        return $this->getAttribute(
+            ScopeBindings::class,
+            static fn(ScopeBindings $attribute) => $attribute->scopeBindings,
+            config('routing.scope_bindings')
+        );
     }
 
     public function withTrashed(): bool
     {
-        if (!$attribute = $this->getAttribute(WithTrashed::class)) {
-            return false;
-        }
-
-        return $attribute->withTrashed;
+        return $this->getAttribute(
+            WithTrashed::class,
+            static fn(WithTrashed $attribute) => $attribute->withTrashed
+        ) ?? false;
     }
 
     /**
      * @template T of RoutingContract
-     * @param class-string<T> $attributeClass
+     * @param class-string<T>|array<class-string<T>> $attributes
+     * @param callable|null                          $callable
+     * @param mixed|null                             $default
+     * @param int                                    $flags
      *
-     * @return T|null
+     * @return T|mixed
      */
-    protected function getAttribute(string $attributeClass)
+    protected function getAttribute(array|string $attributes, callable $callable = null, mixed $default = null, int $flags = ReflectionAttribute::IS_INSTANCEOF)
     {
-        $attributes = $this->class->getAttributes($attributeClass, ReflectionAttribute::IS_INSTANCEOF);
-
-        if (!count($attributes)) {
-            return null;
+        if (is_string($attributes)) {
+            $attributes = [$attributes];
         }
 
-        return $attributes[0]->newInstance();
+        $attributes = array_reduce($attributes, function (array $initial, string $attribute) use ($flags) {
+            return array_merge($initial, $this->class->getAttributes($attribute, $flags));
+        }, []);
+
+        if (count($attributes) === 0) {
+            return $default;
+        }
+
+        return array_reduce($attributes, function (mixed $initial, ReflectionAttribute $attribute) use ($callable) {
+            $instance = $attribute->newInstance();
+            if (is_callable($callable)) {
+                return call_user_func($callable, $instance, $initial);
+            }
+            return $instance;
+        }, []);
     }
 }
