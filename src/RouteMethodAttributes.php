@@ -11,6 +11,7 @@ use Annotation\Route\ScopeBindings;
 use Annotation\Route\WithoutMiddleware;
 use Annotation\Route\WithTrashed;
 use Illuminate\Routing\Route;
+use Illuminate\Support\Str;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionMethod;
@@ -44,7 +45,7 @@ class RouteMethodAttributes
 
     public function getRouteName(): string
     {
-        return $this->method->getName();
+        return Str::kebab($this->method->getName());
     }
 
     /**
