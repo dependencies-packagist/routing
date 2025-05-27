@@ -33,7 +33,7 @@ class RouteMethodAttributes
     {
         return $this->getAttribute(
             RouteContract::class,
-            static fn(RouteContract $routeContract, array $routeAttributes) => array_merge($routeAttributes, [$routeContract]),
+            static fn(RouteContract $routeContract, array $routeAttributes) => array_merge($routeAttributes, [$routeContract])
         ) ?? [];
     }
 
@@ -47,13 +47,17 @@ class RouteMethodAttributes
         return $this->method->getName();
     }
 
+    /**
+     * @param Route $route
+     *
+     * @return static
+     */
     public function setScopeBindingsIfAvailable(Route $route): static
     {
         $scopeBindings = $this->getAttribute(
             ScopeBindings::class,
-            static fn(ScopeBindings $scopeBindings) => $scopeBindings->scopeBindings,
-            false
-        );
+            static fn(ScopeBindings $scopeBindings) => $scopeBindings->scopeBindings
+        ) ?? $this->routeAttributes->scopeBindings();
 
         match ($scopeBindings) {
             true => $route->scopeBindings(),
@@ -64,33 +68,49 @@ class RouteMethodAttributes
         return $this;
     }
 
+    /**
+     * @param Route $route
+     *
+     * @return $this
+     */
     public function setWheresIfAvailable(Route $route): static
     {
         $route->setWheres(array_merge($this->routeAttributes->wheres(), $this->getAttribute(
             WhereContract::class,
-            static fn(WhereContract $whereContract, array $wheres = []) => array_merge($wheres, $whereContract->toArray()),
+            static fn(WhereContract $whereContract, array $wheres = []) => array_merge($wheres, $whereContract->toArray())
         ) ?? []));
 
         return $this;
     }
 
+    /**
+     * @param Route $route
+     *
+     * @return $this
+     */
     public function setDefaultsIfAvailable(Route $route): static
     {
         $route->setDefaults(array_merge($this->routeAttributes->defaults(), $defaults = $this->getAttribute(
             Defaults::class,
-            static fn(Defaults $defaults, array $initial = []) => array_merge($initial, $defaults->toArray()),
+            static fn(Defaults $defaults, array $initial = []) => array_merge($initial, $defaults->toArray())
         ) ?? []));
 
         return $this;
     }
 
+    /**
+     * @param Route $route
+     * @param array $middleware
+     *
+     * @return $this
+     */
     public function addMiddlewareToRoute(Route $route, array $middleware): static
     {
         $route->middleware(array_merge(
             $middleware,
             $this->getAttribute(
                 Middleware::class,
-                static fn(Middleware $middleware, array $defaults = []) => array_merge($defaults, $middleware->middleware),
+                static fn(Middleware $middleware, array $defaults = []) => array_merge($defaults, $middleware->middleware)
             ) ?? [],
             $this->routeAttributes->middleware()
         ));
@@ -98,13 +118,19 @@ class RouteMethodAttributes
         return $this;
     }
 
+    /**
+     * @param Route $route
+     * @param array $middleware
+     *
+     * @return $this
+     */
     public function addWithoutMiddlewareToRoute(Route $route, array $middleware): static
     {
         $route->withoutMiddleware(array_merge(
             $middleware,
             $this->getAttribute(
                 WithoutMiddleware::class,
-                static fn(WithoutMiddleware $middleware, array $defaults = []) => array_merge($defaults, $middleware->withoutMiddleware),
+                static fn(WithoutMiddleware $middleware, array $defaults = []) => array_merge($defaults, $middleware->withoutMiddleware)
             ) ?? [],
             $this->routeAttributes->withoutMiddleware()
         ));
@@ -112,11 +138,16 @@ class RouteMethodAttributes
         return $this;
     }
 
+    /**
+     * @param Route $route
+     *
+     * @return $this
+     */
     public function setWithTrashedIfAvailable(Route $route): static
     {
         $withTrashed = $this->getAttribute(
             WithTrashed::class,
-            static fn(WithTrashed $withTrashed) => $withTrashed->withTrashed,
+            static fn(WithTrashed $withTrashed) => $withTrashed->withTrashed
         ) ?? $this->routeAttributes->withTrashed();
 
         if (!is_null($withTrashed)) {
