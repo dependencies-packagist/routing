@@ -173,6 +173,14 @@ class RouteRegistrar
      */
     protected function registerRoutes(ReflectionClass $class, RouteAttributes $routeAttributes): void
     {
+        if ($routeAttributes->isResourceContract()) {
+            $this->group(array_filter([
+                'domain' => $routeAttributes->domain(),
+                'prefix' => $routeAttributes->prefix(),
+            ]), fn() => $this->getResourceRoutes($class, $routeAttributes));
+            return;
+        }
+
         foreach ($routeAttributes->groups() as $group) {
             $this->group($group, fn() => $this->getRoutes($class, $routeAttributes));
         }
@@ -209,11 +217,6 @@ class RouteRegistrar
      */
     public function getRoutes(ReflectionClass $class, RouteAttributes $routeAttributes): void
     {
-        if ($routeAttributes->isResourceContract()) {
-            $this->getResourceRoutes($class, $routeAttributes);
-            return;
-        }
-
         foreach ($this->getDeclaringMethods($class, $routeAttributes) as $method) {
             foreach ($method->getRouteAttributes() as $attribute) {
                 $route = $this->router
