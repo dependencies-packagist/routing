@@ -181,7 +181,7 @@ use Annotation\Route\Route\Get;
 
 class MyController
 {
-    #[Get('route', name: 'name')]
+    #[Get('route', name: 'route')]
     public function myMethod()
     {
     }
@@ -191,7 +191,7 @@ class MyController
 This attribute will automatically register this route:
 
 ```php
-Route::get('route', [MyController::class, 'myMethod'])->prefix('my')->name('my.name');
+Route::get('route', [MyController::class, 'myMethod'])->prefix('my')->name('my.route');
 ```
 
 ### Using other HTTP verbs
@@ -204,58 +204,6 @@ We have left no HTTP verb behind. You can use these attributes on controller met
 #[Annotation\Route\Route\Patch('uri')]
 #[Annotation\Route\Route\Delete('uri')]
 #[Annotation\Route\Route\Options('uri')]
-```
-
-### Resource Controllers
-
-To register a [resource controller](https://laravel.com/docs/controllers#resource-controllers), use the `Resource` attribute as shown in the example below.
-
-- You can use `only` or `except` parameters to manage your resource routes availability.
-- You can use `parameters` parameter to modify the default parameters set by the resource attribute.
-- You can use the `names` parameter to set the route names for the resource controller actions. Pass a string value to set a base route name for each controller action or pass an array value to define the route name for each controller action.
-- You can use `shallow` parameter to make a nested resource to apply nesting only to routes without a unique child identifier (`index`, `create`, `store`).
-- You can use `apiResource` boolean parameter to only include actions used in APIs. Alternatively, you can use the `ApiResource` attribute, which extends the `Resource` attribute class, but the parameter `apiResource` is already set to `true`.
-- Using `Resource` attribute with `Domain`, `Prefix` and `Middleware` attributes works as well.
-
-```php
-namespace App\Http\Controllers;
-
-use Annotation\Route\Prefix;
-use Annotation\Route\Resource;
-use Illuminate\Http\Request;
-
-#[Prefix('api/v1')]
-#[Resource(
-    resource: 'photos.comments',
-    apiResource: true,
-    except: ['destroy'],
-    names: 'api.v1.photo-comments',
-    parameters: ['comments' => 'comment:uuid'],
-    shallow: true,
-)]
-class PhotoCommentController
-{
-    public function index($photo)
-    {}
-
-    public function store(Request $request, $photo)
-    {}
-
-    public function show($comment)
-    {}
-
-    public function update(Request $request, $comment)
-    {}
-}
-```
-
-The attribute in the example above will automatically register following routes:
-
-```php
-Route::get('api/v1/comments/{comment}', [PhotoCommentController::class, 'show'])->name('api.v1.photo-comments.show');
-Route::match(['put', 'patch'], 'api/v1/comments/{comment}', [PhotoCommentController::class, 'update'])->name('api.v1.photo-comments.update');
-Route::get('api/v1/photos/{photo}/comments', [PhotoCommentController::class, 'index'])->name('api.v1.photo-comments.index');
-Route::post('api/v1/photos/{photo}/comments', [PhotoCommentController::class, 'store'])->name('api.v1.photo-comments.store');
 ```
 
 ### Using multiple verbs
@@ -595,6 +543,58 @@ These annotations will automatically register these routes:
 Route::get('route', [MyController::class, 'myMethod'])->prefix('my')->WithTrashed();
 Route::post('route', [MyController::class, 'myPostMethod'])->prefix('my')->withTrashed(false);
 Route::get('default-route', [MyController::class, 'myDefaultMethod'])->prefix('my')->withTrashed();
+```
+
+### Resource Controllers
+
+To register a [resource controller](https://laravel.com/docs/controllers#resource-controllers), use the `Resource` attribute as shown in the example below.
+
+- You can use `only` or `except` parameters to manage your resource routes availability.
+- You can use `parameters` parameter to modify the default parameters set by the resource attribute.
+- You can use the `names` parameter to set the route names for the resource controller actions. Pass a string value to set a base route name for each controller action or pass an array value to define the route name for each controller action.
+- You can use `shallow` parameter to make a nested resource to apply nesting only to routes without a unique child identifier (`index`, `create`, `store`).
+- You can use `apiResource` boolean parameter to only include actions used in APIs. Alternatively, you can use the `ApiResource` attribute, which extends the `Resource` attribute class, but the parameter `apiResource` is already set to `true`.
+- Using `Resource` attribute with `Domain`, `Prefix` and `Middleware` attributes works as well.
+
+```php
+namespace App\Http\Controllers;
+
+use Annotation\Route\Prefix;
+use Annotation\Route\Resource;
+use Illuminate\Http\Request;
+
+#[Prefix('api/v1')]
+#[Resource(
+    resource: 'photos.comments',
+    apiResource: true,
+    except: ['destroy'],
+    names: 'api.v1.photo-comments',
+    parameters: ['comments' => 'comment:uuid'],
+    shallow: true,
+)]
+class PhotoCommentController
+{
+    public function index($photo)
+    {}
+
+    public function store(Request $request, $photo)
+    {}
+
+    public function show($comment)
+    {}
+
+    public function update(Request $request, $comment)
+    {}
+}
+```
+
+The attribute in the example above will automatically register following routes:
+
+```php
+Route::get('api/v1/comments/{comment}', [PhotoCommentController::class, 'show'])->name('api.v1.photo-comments.show');
+Route::match(['put', 'patch'], 'api/v1/comments/{comment}', [PhotoCommentController::class, 'update'])->name('api.v1.photo-comments.update');
+Route::get('api/v1/photos/{photo}/comments', [PhotoCommentController::class, 'index'])->name('api.v1.photo-comments.index');
+Route::post('api/v1/photos/{photo}/comments', [PhotoCommentController::class, 'store'])->name('api.v1.photo-comments.store');
 ```
 
 <!-- CONTRIBUTING -->
