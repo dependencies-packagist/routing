@@ -19,7 +19,7 @@
     ],
     "require": {
         "php": "^8.0",
-        "annotation/route": "^1.0"
+        "annotation/route": "^1.1"
     },
     "autoload": {
         "psr-4": {
@@ -27,7 +27,7 @@
         }
     },
     "provide": {
-        "annotation/route-implementation": "1.x-dev"
+        "annotation/route-implementation": "1.0"
     },
     "autoload-dev": {
         "psr-4": {
