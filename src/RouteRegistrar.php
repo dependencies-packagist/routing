@@ -9,8 +9,9 @@ use Illuminate\Routing\Router;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use ReflectionAttribute;
-use ReflectionClass;
+use ReflectionException;
 use ReflectionMethod;
+use Reflective\Reflection\ReflectionClass;
 use SplFileInfo;
 use Symfony\Component\Finder\Finder;
 
@@ -158,11 +159,12 @@ class RouteRegistrar
             return;
         }
 
-        $class = new ReflectionClass($className);
+        try {
+            $routeAttributes = new RouteAttributes($class = new ReflectionClass($className));
 
-        $routeAttributes = new RouteAttributes($class);
-
-        $this->registerRoutes($class, $routeAttributes);
+            $this->registerRoutes($class, $routeAttributes);
+        } catch (ReflectionException $e) {
+        }
     }
 
     /**
@@ -194,12 +196,9 @@ class RouteRegistrar
      */
     protected function getDeclaringMethods(ReflectionClass $class, RouteAttributes $routeAttributes): array
     {
-        $methods = array_filter($class->getMethods(ReflectionMethod::IS_PUBLIC), function (ReflectionMethod $method) use ($class) {
+        $methods = array_filter($class->getDeclaredMethods(ReflectionMethod::IS_PUBLIC), function (ReflectionMethod $method) use ($class) {
             $attributes = $method->getAttributes(RoutingContract::class, ReflectionAttribute::IS_INSTANCEOF);
-            if (count($attributes) === 0) {
-                return false;
-            }
-            if ($method->getDeclaringClass()->getName() == $class->getName()) {
+            if (count($attributes)) {
                 return true;
             }
             return false;
@@ -217,8 +216,8 @@ class RouteRegistrar
      */
     public function getRoutes(ReflectionClass $class, RouteAttributes $routeAttributes): void
     {
-        foreach ($this->getDeclaringMethods($class, $routeAttributes) as $method) {
-            foreach ($method->getRouteAttributes() as $attribute) {
+        foreach ($methods = $this->getDeclaringMethods($class, $routeAttributes) as $method) {
+            foreach ($attributes = $method->getMethodAttributes() as $attribute) {
                 $route = $this->router
                     ->addRoute($attribute->getMethods(), $attribute->getUri($method->getRouteName()), $method->getRouteAction())
                     ->name($attribute->getName($method->getRouteName()))
