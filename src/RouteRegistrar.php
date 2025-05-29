@@ -221,13 +221,15 @@ class RouteRegistrar
             foreach ($method->getRouteAttributes() as $attribute) {
                 $route = $this->router
                     ->addRoute($attribute->getMethods(), $attribute->getUri($method->getRouteName()), $method->getRouteAction())
-                    ->name($attribute->getName($method->getRouteName()));
+                    ->name($attribute->getName($method->getRouteName()))
+                    ->middleware($this->middleware())
+                    ->withoutMiddleware($this->withoutMiddleware());
                 $method->setScopeBindingsIfAvailable($route)
                     ->setWithTrashedIfAvailable($route)
                     ->setWheresIfAvailable($route)
                     ->setDefaultsIfAvailable($route)
-                    ->addMiddlewareToRoute($route, $this->middleware(), $attribute->getMiddleware())
-                    ->addWithoutMiddlewareToRoute($route, $this->withoutMiddleware(), $attribute->getWithoutMiddleware());
+                    ->addMiddlewareToRoute($route, $attribute->getMiddleware())
+                    ->addWithoutMiddlewareToRoute($route, $attribute->getWithoutMiddleware());
             }
         }
     }
@@ -302,13 +304,13 @@ class RouteRegistrar
             }
         }
 
-        $route->middleware(array_merge(
-            $this->middleware,
-            $routeAttributes->middleware()
-        ))->withoutMiddleware(array_merge(
-            $this->withoutMiddleware,
-            $routeAttributes->withoutMiddleware()
-        ));
+        $route->middleware([
+            ...$this->middleware(),
+            ...$routeAttributes->middleware(),
+        ])->withoutMiddleware([
+            ...$this->withoutMiddleware(),
+            ...$routeAttributes->withoutMiddleware(),
+        ]);
     }
 
     /**

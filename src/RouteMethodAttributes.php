@@ -72,7 +72,7 @@ class RouteMethodAttributes
     /**
      * @param Route $route
      *
-     * @return $this
+     * @return static
      */
     public function setWheresIfAvailable(Route $route): static
     {
@@ -87,11 +87,11 @@ class RouteMethodAttributes
     /**
      * @param Route $route
      *
-     * @return $this
+     * @return static
      */
     public function setDefaultsIfAvailable(Route $route): static
     {
-        $route->setDefaults(array_merge($this->routeAttributes->defaults(), $defaults = $this->getAttribute(
+        $route->setDefaults(array_merge($this->routeAttributes->defaults(), $this->getAttribute(
             Defaults::class,
             static fn(Defaults $defaults, array $initial = []) => array_merge($initial, $defaults->toArray())
         ) ?? []));
@@ -101,44 +101,40 @@ class RouteMethodAttributes
 
     /**
      * @param Route $route
-     * @param array $globalMiddleware
      * @param array $middleware
      *
-     * @return $this
+     * @return static
      */
-    public function addMiddlewareToRoute(Route $route, array $globalMiddleware, array $middleware): static
+    public function addMiddlewareToRoute(Route $route, array $middleware): static
     {
-        $route->middleware(array_unique(array_merge(
-            $globalMiddleware,
-            $middleware,
-            $this->getAttribute(
+        $route->middleware([
+            ...$this->routeAttributes->middleware(),
+            ...$this->getAttribute(
                 Middleware::class,
                 static fn(Middleware $middleware, array $defaults = []) => array_merge($defaults, $middleware->middleware)
             ) ?? [],
-            $this->routeAttributes->middleware()
-        )));
+            ...$middleware,
+        ]);
 
         return $this;
     }
 
     /**
      * @param Route $route
-     * @param array $globalMiddleware
      * @param array $middleware
      *
-     * @return $this
+     * @return static
      */
-    public function addWithoutMiddlewareToRoute(Route $route, array $globalMiddleware, array $middleware): static
+    public function addWithoutMiddlewareToRoute(Route $route, array $middleware): static
     {
-        $route->withoutMiddleware(array_unique(array_merge(
-            $globalMiddleware,
-            $middleware,
-            $this->getAttribute(
+        $route->withoutMiddleware([
+            ...$this->routeAttributes->withoutMiddleware(),
+            ...$this->getAttribute(
                 WithoutMiddleware::class,
                 static fn(WithoutMiddleware $middleware, array $defaults = []) => array_merge($defaults, $middleware->withoutMiddleware)
             ) ?? [],
-            $this->routeAttributes->withoutMiddleware()
-        )));
+            ...$middleware,
+        ]);
 
         return $this;
     }
@@ -146,7 +142,7 @@ class RouteMethodAttributes
     /**
      * @param Route $route
      *
-     * @return $this
+     * @return static
      */
     public function setWithTrashedIfAvailable(Route $route): static
     {
