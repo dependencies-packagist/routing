@@ -177,7 +177,7 @@ class RouteRegistrar
     {
         if ($routeAttributes->isResourceContract()) {
             $this->group(array_filter([
-                'domain' => $routeAttributes->domain(),
+                'domain' => $routeAttributes->config() ?? $routeAttributes->domain(),
                 'prefix' => $routeAttributes->prefix(),
             ]), fn() => $this->getResourceRoutes($class, $routeAttributes));
             return;
@@ -197,11 +197,7 @@ class RouteRegistrar
     protected function getDeclaringMethods(ReflectionClass $class, RouteAttributes $routeAttributes): array
     {
         $methods = array_filter($class->getDeclaredMethods(ReflectionMethod::IS_PUBLIC), function (ReflectionMethod $method) use ($class) {
-            $attributes = $method->getAttributes(RoutingContract::class, ReflectionAttribute::IS_INSTANCEOF);
-            if (count($attributes)) {
-                return true;
-            }
-            return false;
+            return count($method->getAttributes(RoutingContract::class, ReflectionAttribute::IS_INSTANCEOF));
         });
         return array_map(function (ReflectionMethod $method) use ($class, $routeAttributes) {
             return new RouteMethodAttributes($class, $routeAttributes, $method);
