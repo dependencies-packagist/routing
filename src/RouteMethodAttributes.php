@@ -101,40 +101,44 @@ class RouteMethodAttributes
 
     /**
      * @param Route $route
+     * @param array $globalMiddleware
      * @param array $middleware
      *
      * @return $this
      */
-    public function addMiddlewareToRoute(Route $route, array $middleware): static
+    public function addMiddlewareToRoute(Route $route, array $globalMiddleware, array $middleware): static
     {
-        $route->middleware(array_merge(
+        $route->middleware(array_unique(array_merge(
+            $globalMiddleware,
             $middleware,
             $this->getAttribute(
                 Middleware::class,
                 static fn(Middleware $middleware, array $defaults = []) => array_merge($defaults, $middleware->middleware)
             ) ?? [],
             $this->routeAttributes->middleware()
-        ));
+        )));
 
         return $this;
     }
 
     /**
      * @param Route $route
+     * @param array $globalMiddleware
      * @param array $middleware
      *
      * @return $this
      */
-    public function addWithoutMiddlewareToRoute(Route $route, array $middleware): static
+    public function addWithoutMiddlewareToRoute(Route $route, array $globalMiddleware, array $middleware): static
     {
-        $route->withoutMiddleware(array_merge(
+        $route->withoutMiddleware(array_unique(array_merge(
+            $globalMiddleware,
             $middleware,
             $this->getAttribute(
                 WithoutMiddleware::class,
                 static fn(WithoutMiddleware $middleware, array $defaults = []) => array_merge($defaults, $middleware->withoutMiddleware)
             ) ?? [],
             $this->routeAttributes->withoutMiddleware()
-        ));
+        )));
 
         return $this;
     }

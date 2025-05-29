@@ -220,14 +220,14 @@ class RouteRegistrar
         foreach ($this->getDeclaringMethods($class, $routeAttributes) as $method) {
             foreach ($method->getRouteAttributes() as $attribute) {
                 $route = $this->router
-                    ->addRoute($attribute->methods, $attribute->uri, $method->getRouteAction())
-                    ->name($attribute->name ?? $method->getRouteName());
+                    ->addRoute($attribute->getMethods(), $attribute->getUri($method->getRouteName()), $method->getRouteAction())
+                    ->name($attribute->getName($method->getRouteName()));
                 $method->setScopeBindingsIfAvailable($route)
                     ->setWithTrashedIfAvailable($route)
                     ->setWheresIfAvailable($route)
                     ->setDefaultsIfAvailable($route)
-                    ->addMiddlewareToRoute($route, $this->middleware())
-                    ->addWithoutMiddlewareToRoute($route, $this->withoutMiddleware());
+                    ->addMiddlewareToRoute($route, $this->middleware(), $attribute->getMiddleware())
+                    ->addWithoutMiddlewareToRoute($route, $this->withoutMiddleware(), $attribute->getWithoutMiddleware());
             }
         }
     }
