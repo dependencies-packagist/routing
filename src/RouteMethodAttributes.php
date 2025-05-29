@@ -27,17 +27,6 @@ class RouteMethodAttributes
         //
     }
 
-    /**
-     * @return \Annotation\Route\Route[]
-     */
-    public function getRouteAttributes(): array
-    {
-        return $this->getAttribute(
-            RouteContract::class,
-            static fn(RouteContract $routeContract, array $routeAttributes) => array_merge($routeAttributes, [$routeContract])
-        ) ?? [];
-    }
-
     public function getRouteAction(): array|string
     {
         return $this->method->getName() == '__invoke' ? $this->class->getName() : [$this->class->getName(), $this->method->getName()];
@@ -188,5 +177,16 @@ class RouteMethodAttributes
             }
             return $instance;
         }, []);
+    }
+
+    /**
+     * @return \Annotation\Route\Route[]
+     */
+    public function getMethodAttributes(): array
+    {
+        return $this->getAttribute(
+            RouteContract::class,
+            static fn(RouteContract $routeContract, array $routeAttributes) => array_merge($routeAttributes, [$routeContract])
+        ) ?? [];
     }
 }
