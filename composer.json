@@ -19,7 +19,8 @@
     ],
     "require": {
         "php": "^8.0",
-        "annotation/route": "^1.1"
+        "annotation/route": "^1.1",
+        "reflective/reflection": "^3.0"
     },
     "autoload": {
         "psr-4": {
