@@ -18,7 +18,7 @@ use Annotation\Route\WithoutMiddleware;
 use Annotation\Route\WithTrashed;
 use Illuminate\Support\Str;
 use ReflectionAttribute;
-use ReflectionClass;
+use Reflective\Reflection\ReflectionClass;
 
 class RouteAttributes
 {
@@ -31,44 +31,110 @@ class RouteAttributes
 
     public function prefix(): ?string
     {
-        return $this->getAttribute(Prefix::class, static fn(Prefix $attribute) => $attribute->prefix);
+        $prefix = $this->getAttribute(Prefix::class, function (Prefix $attribute, mixed $prefix = []) {
+            foreach (explode('/', $attribute->prefix) as $item) {
+                $prefix[] = $item;
+            }
+            return array_filter($prefix);
+        }, []);
+
+        return implode('/', $prefix) ?: null;
+    }
+
+    /**
+     * @return string
+     * @deprecated unUse
+     */
+    public function getPrefixByControllerName(): string
+    {
+        return Str::of($this->class->getNamespaceName())
+            ->explode('\\')
+            ->slice(3)
+            ->push(Str::replaceLast('Controller', '', $this->class->getShortName()))
+            ->map(static fn($segment) => Str::kebab($segment))
+            ->implode('/');
+    }
+
+    public function getPrefixWithDomain(?string $prefix = null, mixed $domain = false, ?string $default = null): ?string
+    {
+        $prefix = $prefix ?: $default ?: null;
+
+        if (is_null($prefix)) {
+            return null;
+        }
+
+        $prefix = explode('/', $prefix);
+
+        return implode('/', $domain ? array_slice($prefix, 1) : $prefix) ?: null;
+    }
+
+    protected function getNameFormPrefix(?string $prefix = null, ?string $default = null): ?string
+    {
+        $prefix = $prefix ?: $default ?: null;
+
+        if (is_null($prefix)) {
+            return null;
+        }
+
+        return str_replace('/', '.', trim($prefix, '/') . '/');
     }
 
     public function domain(): ?string
     {
-        return $this->getAttribute(Domain::class, static fn(Domain $attribute) => $attribute->domain);
+        return $this->getAttribute(Domain::class, static fn(Domain $attribute) => $attribute->domain, $this->config());
     }
 
-    public function fromConfig(): ?string
+    public function config(): ?string
     {
         return $this->getAttribute(Config::class, static fn(Config $attribute) => config($attribute->key, $attribute->value));
     }
 
     public function groups(): array
     {
-        return $this->getAttribute(Group::class, function (Group $attribute, mixed $groups = []) {
-            $group    = array_filter([
-                'domain' => $attribute->domain,
-                'prefix' => $attribute->prefix ? trim("{$this->prefix()}/{$attribute->prefix}") : null,
-                'where'  => $attribute->where,
-                'as'     => $attribute->as,
-            ]);
-            $groups[] = array_merge($this->getDefaultGroupAttribute(), $group);
-            return $groups;
-        }, [$this->getDefaultGroupAttribute()]);
+        $group = $this->getAttribute(Group::class, function (Group $attribute, mixed $groups = []) {
+            $prefix   = $groups['prefix'] ?? [];
+            $domain   = $groups['domain'] ?? [];
+            $where    = $groups['where'] ?? [];
+            $as       = $groups['as'] ?? [];
+            $domain[] = $attribute->domain;
+            $as[]     = trim($this->getNameFormPrefix($attribute->as, $attribute->prefix), '.');
+            foreach (explode('/', $attribute->prefix) as $item) {
+                $prefix[] = $item;
+            }
+            return [
+                'prefix' => array_filter($prefix),
+                'domain' => array_filter($domain),
+                'where'  => array_merge($where, $attribute->where),
+                'as'     => array_filter($as),
+            ];
+        }, []);
+
+        if (count($group) == 0) {
+            return [];
+        }
+
+        $prefix = $group['prefix'] ?? [];
+        $domain = $group['domain'] ?? [];
+        $where  = $group['where'] ?? [];
+        $as     = $group['as'] ?? [];
+
+        $prefix = implode('/', $prefix);
+        $as     = implode('/', $as);
+
+        return array_filter([
+            'prefix' => $this->getPrefixWithDomain($prefix),
+            'domain' => end($domain),
+            'where'  => $where,
+            'as'     => $this->getNameFormPrefix($as),
+        ]);
     }
 
     public function getDefaultGroupAttribute(): array
     {
-        $as = Str::of($this->class->getNamespaceName())
-            ->explode('\\')
-            ->slice(3)
-            ->push(Str::replaceLast('Controller', '', $this->class->getShortName()))
-            ->map(static fn($segment) => Str::kebab($segment));
         return array_filter([
-            'domain' => $this->fromConfig() ?? $this->domain(),
-            'prefix' => $this->prefix() ?? $as->implode('/'),
-            'as'     => $as->push('')->implode('.'),
+            'prefix' => $this->getPrefixWithDomain($this->prefix(), $this->domain()),
+            'domain' => $this->domain(),
+            'as'     => $this->getNameFormPrefix($this->prefix()),
         ]);
     }
 
@@ -159,7 +225,12 @@ class RouteAttributes
     {
         return $this->getAttribute(
             [Resource::class, Singleton::class],
-            static fn(Resource|Singleton $attribute) => $attribute->names
+            function (Resource $attribute) {
+                if (is_array($attribute->names)) {
+                    return $attribute->names;
+                }
+                return trim($this->getNameFormPrefix($attribute->names, $attribute->resource), '.');
+            }
         );
     }
 
@@ -167,7 +238,7 @@ class RouteAttributes
     {
         return $this->getAttribute(
             Middleware::class,
-            static fn(Middleware $attribute) => $attribute->middleware
+            static fn(Middleware $attribute, mixed $middleware = []) => array_merge($middleware, $attribute->middleware)
         ) ?? [];
     }
 
@@ -175,7 +246,7 @@ class RouteAttributes
     {
         return $this->getAttribute(
             WithoutMiddleware::class,
-            static fn(WithoutMiddleware $attribute) => $attribute->withoutMiddleware
+            static fn(WithoutMiddleware $attribute, mixed $middleware = []) => array_merge($middleware, $attribute->withoutMiddleware)
         ) ?? [];
     }
 
@@ -232,7 +303,12 @@ class RouteAttributes
         }
 
         $attributes = array_reduce($attributes, function (array $initial, string $attribute) use ($flags) {
-            return array_merge($initial, $this->class->getAttributes($attribute, $flags));
+            $attributes = [];
+            foreach ($this->class->getDeclaredParentClass() as $name => $parent) {
+                // $attributes[$name] = $parent->getAttributes($attribute, $flags);
+                $attributes = array_merge($parent->getAttributes($attribute, $flags), $attributes);
+            }
+            return array_merge($initial, $attributes);
         }, []);
 
         if (count($attributes) === 0) {

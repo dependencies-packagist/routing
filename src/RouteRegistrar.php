@@ -175,17 +175,12 @@ class RouteRegistrar
      */
     protected function registerRoutes(ReflectionClass $class, RouteAttributes $routeAttributes): void
     {
-        if ($routeAttributes->isResourceContract()) {
-            $this->group(array_filter([
-                'domain' => $routeAttributes->config() ?? $routeAttributes->domain(),
-                'prefix' => $routeAttributes->prefix(),
-            ]), fn() => $this->getResourceRoutes($class, $routeAttributes));
-            return;
-        }
-
-        foreach ($routeAttributes->groups() as $group) {
-            $this->group($group, fn() => $this->getRoutes($class, $routeAttributes));
-        }
+        $this->group($routeAttributes->getDefaultGroupAttribute(), function (Router $router) use ($class, $routeAttributes) {
+            if ($routeAttributes->isResourceContract()) {
+                return $this->getResourceRoutes($class, $routeAttributes);
+            }
+            return $router->group($routeAttributes->groups(), fn() => $this->getRoutes($class, $routeAttributes));
+        });
     }
 
     /**
