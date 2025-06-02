@@ -30,12 +30,23 @@ This package provides attributes to automatically register routes. Here's a quic
 ```php
 namespace App\Http\Controllers\Backend;
 
+use Annotation\Route\Prefix;
+
+#[Prefix('backend')]
+class BaseController extends Controller
+{}
+```
+
+```php
+namespace App\Http\Controllers\Backend;
+
 use Annotation\Route\Domain;
 use Annotation\Route\Group;
 use Annotation\Route\Prefix;
 use Annotation\Route\Route\Get;
 
-class HomeController extends Controller
+#[Group(prefix: 'home')]
+class HomeController extends BaseController
 {
     #[Get('index', 'index')]
     public function index(Request $request)
@@ -141,7 +152,7 @@ class MyController extends Controller
 This attribute will automatically register this route:
 
 ```php
-Route::get('route', [MyController::class, 'myMethod'])->prefix('my')->name('my.my-method');
+Route::get('route', [MyController::class, 'myMethod'])->name('my-method');
 ```
 
 ### Specifying Prefix
@@ -154,7 +165,7 @@ namespace App\Http\Controllers;
 use Annotation\Route\Prefix;
 use Annotation\Route\Route\Get;
 
-#[Prefix('prefix')]
+#[Prefix('my')]
 class MyController
 {
     #[Get('route')]
@@ -167,7 +178,7 @@ class MyController
 These annotations will automatically register these routes:
 
 ```php
-Route::get('route', [MyController::class, 'myMethod'])->prefix('prefix')->name('my.my-method');
+Route::get('route', [MyController::class, 'myMethod'])->prefix('my')->name('my.my-method');
 ```
 
 ### Specify Named
@@ -181,7 +192,7 @@ use Annotation\Route\Route\Get;
 
 class MyController
 {
-    #[Get('route', name: 'route')]
+    #[Get('route', name: 'my-route')]
     public function myMethod()
     {
     }
@@ -191,7 +202,7 @@ class MyController
 This attribute will automatically register this route:
 
 ```php
-Route::get('route', [MyController::class, 'myMethod'])->prefix('my')->name('my.route');
+Route::get('route', [MyController::class, 'myMethod'])->name('my-route');
 ```
 
 ### Using other HTTP verbs
@@ -241,7 +252,7 @@ class MyController
 This annotation will automatically register this route:
 
 ```php
-Route::get('route', [MyController::class, 'myMethod'])->prefix('my')->middleware(MyMiddleware::class);
+Route::get('route', [MyController::class, 'myMethod'])->middleware(MyMiddleware::class);
 ```
 
 To apply middleware on all methods of a class you can use the Middleware attribute. You can mix this with applying attribute on a method.
@@ -278,9 +289,9 @@ class MyController
 These annotations will automatically register these routes:
 
 ```php
-Route::get('route', [MyController::class, 'myMethod'])->prefix('my')->middleware([GlobalMiddleware::class, MyMiddleware::class]);
-Route::get('global-middleware', [MyController::class, 'globalMiddleware'])->prefix('my')->middleware(GlobalMiddleware::class);
-Route::get('without-middleware', [MyController::class, 'withoutMiddleware'])->prefix('my');
+Route::get('route', [MyController::class, 'myMethod'])->middleware([GlobalMiddleware::class, MyMiddleware::class]);
+Route::get('global-middleware', [MyController::class, 'globalMiddleware'])->middleware(GlobalMiddleware::class);
+Route::get('without-middleware', [MyController::class, 'withoutMiddleware']);
 ```
 
 ### Specifying Domain
@@ -306,7 +317,7 @@ class MyController
 These annotations will automatically register these routes:
 
 ```php
-Route::get('route', [MyController::class, 'myMethod'])->prefix('my')->domain('subdomain.localhost');
+Route::get('route', [MyController::class, 'myMethod'])->domain('subdomain.localhost');
 ```
 
 ### Specify Config
@@ -339,13 +350,13 @@ class MyController
 When this is parsed, it will get the value of `app.url` from the config file and register the route as follows:
 
 ```php
-Route::get('route', [MyController::class, 'myMethod'])->prefix('my')->domain('localhost');
+Route::get('route', [MyController::class, 'myMethod'])->domain('localhost');
 ```
 
 If `app.url` does not exist and register the route as follows:
 
 ```php
-Route::get('route', [MyController::class, 'myMethod'])->prefix('my')->domain('127.0.0.1');
+Route::get('route', [MyController::class, 'myMethod'])->domain('127.0.0.1');
 ```
 
 ### Specifying ScopeBindings
@@ -373,7 +384,7 @@ class MyController
 This is akin to using the `->scopeBindings()` method on the route registrar manually:
 
 ```php
-Route::get('users/{user}/posts/{post}', [MyController::class, 'myMethod'])->prefix('my')->scopeBindings();
+Route::get('users/{user}/posts/{post}', [MyController::class, 'myMethod'])->scopeBindings();
 ```
 
 By default, Laravel will enabled scoped bindings on a route when using a custom keyed implicit binding as a nested route parameter, such as `/users/{user}/posts/{post:slug}`.
@@ -419,8 +430,8 @@ class MyController
 These annotations will automatically register these routes:
 
 ```php
-Route::get('route/{custom}', [MyController::class, 'myMethod'])->prefix('my')->where(['custom' => '[0-9]+']);
-Route::post('post-route/{custom}/{alpha-numeric}', [MyController::class, 'myPostMethod'])->prefix('my')->where(['custom' => '[0-9]+', 'alpha-numeric' => '[a-zA-Z0-9]+']);
+Route::get('route/{custom}', [MyController::class, 'myMethod'])->where(['custom' => '[0-9]+']);
+Route::post('post-route/{custom}/{alpha-numeric}', [MyController::class, 'myPostMethod'])->where(['custom' => '[0-9]+', 'alpha-numeric' => '[a-zA-Z0-9]+']);
 ```
 
 For convenience, some commonly used regular expression patterns have helper attributes that allow you to quickly add pattern constraints to your routes.
@@ -444,8 +455,8 @@ namespace App\Http\Controllers;
 use Annotation\Route\Group;
 use Annotation\Route\Route\Get;
 
-#[Group(domain: 'domain.localhost', prefix: 'domain')]
-#[Group(domain: 'subdomain.localhost', prefix: 'subdomain')]
+#[Group(prefix: 'domain', domain: 'domain.localhost')]
+#[Group(prefix: 'subdomain', domain: 'subdomain.localhost')]
 class MyController
 {
     #[Get('route')]
@@ -498,9 +509,9 @@ class MyController
 These annotations will automatically register these routes:
 
 ```php
-Route::get('route/{param?}', [MyController::class, 'myMethod'])->prefix('my')->setDefaults(['param', 'default']);
-Route::post('route/{param?}/{param2?}', [MyController::class, 'myPostMethod'])->prefix('my')->setDefaults(['param', 'default', 'param2' => 'post-default']);
-Route::get('override-route/{param?}', [MyController::class, 'myOverrideMethod'])->prefix('my')->setDefaults(['param', 'override-default']);
+Route::get('route/{param?}', [MyController::class, 'myMethod'])->setDefaults(['param' => 'default']);
+Route::post('route/{param?}/{param2?}', [MyController::class, 'myPostMethod'])->setDefaults(['param' => 'default', 'param2' => 'post-default']);
+Route::get('override-route/{param?}', [MyController::class, 'myOverrideMethod'])->setDefaults(['param' => 'override-default']);
 ```
 
 ### Specifying WithTrashed
@@ -540,9 +551,34 @@ class MyController
 These annotations will automatically register these routes:
 
 ```php
-Route::get('route', [MyController::class, 'myMethod'])->prefix('my')->WithTrashed();
-Route::post('route', [MyController::class, 'myPostMethod'])->prefix('my')->withTrashed(false);
-Route::get('default-route', [MyController::class, 'myDefaultMethod'])->prefix('my')->withTrashed();
+Route::get('route', [MyController::class, 'myMethod'])->WithTrashed();
+Route::post('route', [MyController::class, 'myPostMethod'])->withTrashed(false);
+Route::get('default-route', [MyController::class, 'myDefaultMethod'])->withTrashed();
+```
+
+### Specifying Fallback
+
+- You can use the `Fallback` annotation on a method that will be executed when no other route matches the incoming request.
+
+```php
+namespace App\Http\Controllers;
+
+use Annotation\Route\Fallback;
+
+class MyController
+{
+    #[Fallback]
+    public function __invoke(Request $request)
+    {
+        return '404';
+    }
+}
+```
+
+These annotations will automatically register these routes:
+
+```php
+Route::fallback(\App\Http\Controllers\MyController::class)->name('fallback');
 ```
 
 ### Resource Controllers
@@ -568,7 +604,7 @@ use Illuminate\Http\Request;
     resource: 'photos.comments',
     apiResource: true,
     except: ['destroy'],
-    names: 'api.v1.photo-comments',
+    names: 'photo-comments',
     parameters: ['comments' => 'comment:uuid'],
     shallow: true,
 )]
