@@ -7,6 +7,7 @@ use Annotation\Route\Contracts\RoutingContract;
 use Annotation\Route\Contracts\WhereContract;
 use Annotation\Route\Middleware;
 use Annotation\Route\Routing\Defaults;
+use Annotation\Route\Routing\Fallback;
 use Annotation\Route\ScopeBindings;
 use Annotation\Route\WithoutMiddleware;
 use Annotation\Route\WithTrashed;
@@ -142,6 +143,22 @@ class RouteMethodAttributes
 
         if (!is_null($withTrashed)) {
             $route->withTrashed($withTrashed);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param Route $route
+     *
+     * @return static
+     */
+    public function setFallbackIfAvailable(Route $route): static
+    {
+        $fallback = $this->getAttribute(Fallback::class);
+
+        if (!is_null($fallback)) {
+            $route->fallback();
         }
 
         return $this;
