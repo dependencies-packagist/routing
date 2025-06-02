@@ -19,7 +19,7 @@
     ],
     "require": {
         "php": "^8.0",
-        "annotation/route": "^1.1",
+        "annotation/route": "^2.0",
         "reflective/reflection": "^3.0"
     },
     "autoload": {
@@ -28,7 +28,7 @@
         }
     },
     "provide": {
-        "annotation/route-implementation": "1.0"
+        "annotation/route-implementation": "2.0"
     },
     "autoload-dev": {
         "psr-4": {
@@ -37,7 +37,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-main": "1.x-dev"
+            "dev-main": "2.x-dev"
         },
         "laravel": {
             "providers": [
