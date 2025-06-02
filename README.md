@@ -16,7 +16,23 @@ Use PHP 8 attributes to register routes in a Laravel Application.
     <ol>
         <li><a href="#quick-start">Quick Start</a></li>
         <li><a href="#installation">Installation</a></li>
-        <li><a href="#usage">Usage</a></li>
+        <li>
+            <a href="#usage">Usage</a>
+            <ol>
+                <li><a href="#basic-usage">Basic Usage</a></li>
+                <li><a href="#specifying-prefix">Specifying Prefix</a></li>
+                <li><a href="#specify-named">Specify Named</a></li>
+                <li><a href="#specifying-middleware">Specifying Middleware</a></li>
+                <li><a href="#specifying-domain">Specifying Domain</a></li>
+                <li><a href="#specify-config">Specify Config</a></li>
+                <li><a href="#specifying-scopeBindings">Specifying ScopeBindings</a></li>
+                <li><a href="#specifying-where">Specifying Where</a></li>
+                <li><a href="#specifying-group">Specifying Group</a></li>
+                <li><a href="#specifying-defaults">Specifying Defaults</a></li>
+                <li><a href="#specifying-withTrashed">Specifying WithTrashed</a></li>
+                <li><a href="#specifying-fallback">Specifying Fallback</a></li>
+            </ol>
+        </li>
         <li><a href="#contributing">Contributing</a></li>
         <li><a href="#contributors">Contributors</a></li>
         <li><a href="#license">License</a></li>
