@@ -218,6 +218,7 @@ class RouteRegistrar
                     ->setWithTrashedIfAvailable($route)
                     ->setWheresIfAvailable($route)
                     ->setDefaultsIfAvailable($route)
+                    ->setFallbackIfAvailable($route)
                     ->addMiddlewareToRoute($route, $attribute->getMiddleware())
                     ->addWithoutMiddlewareToRoute($route, $attribute->getWithoutMiddleware());
             }
