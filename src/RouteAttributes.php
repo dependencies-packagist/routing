@@ -109,9 +109,19 @@ class RouteAttributes
             ];
         }, []);
 
-        if (count($group) == 0) {
-            return [];
-        }
+        // if (count($group) == 0) {
+        //     if ($this->prefix()) {
+        //         $prefix = explode('/', $this->prefix()) + explode('/', $this->getPrefixByControllerName());
+        //         $prefix = implode('/', $prefix);
+        //     } else {
+        //         $prefix = $this->getPrefixByControllerName();
+        //     }
+        //     $prefix = str_replace($this->prefix(), '', $prefix);
+        //     return array_filter([
+        //         'prefix' => $this->getPrefixWithDomain($prefix, $this->domain()),
+        //         'as'     => $this->getNameFormPrefix($prefix),
+        //     ]);
+        // }
 
         $prefix = $group['prefix'] ?? [];
         $domain = $group['domain'] ?? [];
