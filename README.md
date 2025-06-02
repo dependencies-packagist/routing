@@ -20,6 +20,7 @@ Use PHP 8 attributes to register routes in a Laravel Application.
             <a href="#usage">Usage</a>
             <ol>
                 <li><a href="#basic-usage">Basic Usage</a></li>
+                <li><a href="#advanced-usage">Advanced Usage</a></li>
                 <li><a href="#specifying-prefix">Specifying Prefix</a></li>
                 <li><a href="#specify-named">Specify Named</a></li>
                 <li><a href="#specifying-middleware">Specifying Middleware</a></li>
@@ -170,6 +171,94 @@ This attribute will automatically register this route:
 ```php
 Route::get('route', [MyController::class, 'myMethod'])->name('my-method');
 ```
+
+### Advanced Usage
+
+`BaseController` has two subclasses: `HomeController` and `AccountController`.
+
+```php
+namespace App\Http\Controllers\Backend;
+
+use Annotation\Route\Prefix;
+use Annotation\Route\Routing\Config;
+use App\Http\Controllers\Controller;
+
+#[Prefix('backend')]
+#[Config('domains.backend', 'backend.local.dev')]
+class BaseController extends Controller
+{}
+```
+
+#### HomeController:
+
+```php
+namespace App\Http\Controllers\Backend;
+
+use Annotation\Route\Prefix;
+use Annotation\Route\Route\Get;
+
+#[Prefix('home')]
+class HomeController extends BaseController
+{
+    #[Get]
+    public function index(Request $request)
+    {
+    }
+}
+```
+
+This attribute will automatically register this route:
+
+```php
+use App\Http\Controllers\Backend\HomeController;
+use Illuminate\Support\Facades\Route;
+
+Route::prefix('backend/home')
+    ->name('backend.home.')
+    ->domain('backend.local.dev')
+    ->group(function () {
+        Route::get('index', [HomeController::class, 'index'])->name('index');
+    });
+```
+
+> Route URI: http://backend.local.dev/home/index
+>
+> Route Named: backend.home.index
+
+#### AccountController:
+
+```php
+namespace App\Http\Controllers\Backend;
+
+use Annotation\Route\Group;
+use Annotation\Route\Route\Get;
+
+#[Group(prefix: 'account', domain: 'passport.local.dev', as: 'passport')]
+class AccountController extends BaseController
+{
+    #[Get]
+    public function login(Request $request)
+    {
+    }
+}
+```
+
+This attribute will automatically register this route:
+
+```php
+use App\Http\Controllers\Backend\AccountController;
+use Illuminate\Support\Facades\Route;
+
+Route::prefix('backend/account')
+    ->name('backend.passport.')
+    ->group(function () {
+        Route::get('login', [AccountController::class, 'login'])->name('login')->domain('passport.local.dev');
+    });
+```
+
+> Route URI: http://passport.local.dev/account/login
+>
+> Route Named: backend.passport.login
 
 ### Specifying Prefix
 
