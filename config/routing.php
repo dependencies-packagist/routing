@@ -75,4 +75,33 @@ return [
     */
 
     'scope_bindings' => null,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Aliases Configurations
+    |--------------------------------------------------------------------------
+    |
+    | Aliases of Action in Gateway Mode.
+    |
+    */
+
+    'alias' => [
+        '1.0.0' => [
+            'ping' => 'utils.ping.ping',
+        ],
+        '2.0.0' => [
+            'ping' => 'utils.ping.pong',
+        ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Gateway Middleware
+    |--------------------------------------------------------------------------
+    |
+    | This middleware will be applied to the gateway routes.
+    |
+    */
+
+    'gateway_middleware' => [],
 ];
