@@ -44,7 +44,7 @@ class RouteServiceProvider extends ServiceProvider
         ));
 
         $this->app->singleton(GateWayRouteRegistrar::class, function () {
-            return new GateWayRouteRegistrar(app('router'));
+            return new GateWayRouteRegistrar;
         });
 
         Router::mixin(new Routing);

@@ -4,7 +4,7 @@ namespace Annotation\Routing;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Route;
-use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Route as Router;
 use Illuminate\Support\Str;
 use ReflectionException;
 use ReflectionMethod;
@@ -12,14 +12,9 @@ use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 
 class GateWayRouteRegistrar
 {
-    public function __construct(protected Router $router)
-    {
-        //
-    }
-
     public function gateway(string $endpoint = 'gateway.do', callable $action = null, callable $version = null): Route
     {
-        return $this->router->any($endpoint, function (Request $request) use ($action, $version) {
+        return Router::any($endpoint, function (Request $request) use ($action, $version) {
             $action  = app()->call($action ?? fn() => $request->input('action'));
             $version = app()->call($version ?? fn() => $request->input('version'));
             $uri     = $this->getRouteByName($action, $version, $default = '{fallbackPlaceholder}');
@@ -37,7 +32,7 @@ class GateWayRouteRegistrar
             // 将新的 Request 实例绑定到服务容器
             app()->instance(Request::class, $request);
             //使用路由器来分发子请求
-            return $this->router->dispatch($request);
+            return Router::dispatch($request);
         })->middleware(config('routing.gateway_middleware', []))->name('gateway');
     }
 
@@ -65,7 +60,7 @@ class GateWayRouteRegistrar
      */
     protected function resolveRoute(string $name, string $default = '{fallbackPlaceholder}'): string
     {
-        $routes = $this->router->getRoutes();
+        $routes = Router::getRoutes();
 
         if ($routes->hasNamedRoute($name)) {
             return $routes->getByName($name)->uri();
@@ -92,7 +87,7 @@ class GateWayRouteRegistrar
         try {
             $reflection = new ReflectionMethod($class, $method);
             if ($reflection->isPublic()) {
-                return $this->router->post($collect->map(function ($item) {
+                return Router::post($collect->map(function ($item) {
                     return Str::kebab($item);
                 })->implode('/'), $target)->name($name)->uri();
             }
