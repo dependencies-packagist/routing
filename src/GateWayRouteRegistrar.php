@@ -12,6 +12,13 @@ use Symfony\Component\HttpFoundation\Request as SymfonyRequest;
 
 class GateWayRouteRegistrar
 {
+    protected function replaceRouteParameters(string $route, Request $request): string
+    {
+        return preg_replace_callback('/{(\w+)}/', function ($matches) use ($request) {
+            return $request->input($matches[1], $matches[0]);
+        }, $route);
+    }
+
     public function gateway(string $endpoint = 'gateway.do', callable $action = null, callable $version = null): Route
     {
         return Router::any($endpoint, function (Request $request) use ($action, $version) {
@@ -19,6 +26,7 @@ class GateWayRouteRegistrar
             $version = app()->call($version ?? fn() => $request->input('version'));
             $uri     = $this->getRouteByName($action, $version, $default = '{fallbackPlaceholder}');
             $method  = $uri == $default ? 'GET' : $request->getMethod();
+            $uri     = $this->replaceRouteParameters($uri, $request);
             // 将 SymfonyRequest 转换为 Request 实例
             $request = Request::createFromBase(SymfonyRequest::create(
                 $uri,
