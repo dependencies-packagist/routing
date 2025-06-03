@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route as Facade;
 
 /**
  * @method static void directories(array $directories)
+ * @method static void gateway(string $endpoint = 'gateway.do', callable $action = null, callable $version = null)
  *
  * @see \Annotation\Routing\Routing
  * @see \Illuminate\Routing\Router

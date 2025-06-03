@@ -8,6 +8,15 @@ class Routing
 {
     public function directories(): Closure
     {
-        return fn(array $directories) => app(RouteRegistrar::class)->directories($directories);
+        return function (array $directories): void {
+            app(RouteRegistrar::class)->directories($directories);
+        };
+    }
+
+    public function gateway(): Closure
+    {
+        return function (string $endpoint = 'gateway.do', Closure $action = null, Closure $version = null): void {
+            app(GateWayRouteRegistrar::class)->gateway($endpoint, $action, $version);
+        };
     }
 }

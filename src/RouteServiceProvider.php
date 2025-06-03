@@ -43,6 +43,10 @@ class RouteServiceProvider extends ServiceProvider
                 ->useWithoutMiddleware($this->getRouteExcludedMiddlewares())
         ));
 
+        $this->app->singleton(GateWayRouteRegistrar::class, function () {
+            return new GateWayRouteRegistrar(app('router'));
+        });
+
         Router::mixin(new Routing);
 
         if (!$this->shouldRegisterRoutes()) {
