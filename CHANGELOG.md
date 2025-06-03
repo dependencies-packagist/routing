@@ -1,5 +1,28 @@
 # CHANGELOG
 
+## [v2.1.0](https://github.com/dependencies-packagist/routing/compare/v2.0.0...v2.1.0) - 2025-06-04
+
+<details>
+    <summary>Support Unified Gateway Endpoint</summary>
+
+```php
+Route::gateway('gateway.do');
+```
+
+By default, the `action` route parameters and `version` parameters are dynamically obtained from the `POST` request.
+
+```php
+Route::gateway('api', function (Request $request) {
+    return $request->header('method');
+}, function (Request $request) {
+    return $request->header('version');
+});
+```
+
+You can retrieve other fields from the `HEAD` request according to your needs.
+
+</details>
+
 ## [v2.0.0](https://github.com/dependencies-packagist/routing/compare/v1.0.0...v2.0.0) - 2025-06-03
 
 <details>
