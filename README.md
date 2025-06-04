@@ -773,7 +773,7 @@ Contributions of any kind are welcome!
 
 ## License
 
-Distributed under the project_license. Please see [License File] for more information.
+Distributed under the MIT License (MIT). Please see [License File] for more information.
 
 <p align="right">[<a href="#readme-top">back to top</a>]</p>
 
