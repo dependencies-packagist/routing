@@ -14,8 +14,8 @@ class GateWayRouteRegistrar
 {
     protected function replaceRouteParameters(string $route, Request $request): string
     {
-        return preg_replace_callback('/{(\w+)}/', function ($matches) use ($request) {
-            return $request->input($matches[1], $matches[0]);
+        return preg_replace_callback('/\{(\w+)(\?)?\}/', function ($matches) use ($request) {
+            return $request->input($matches[1], isset($matches[2]) ? null : $matches[0]);
         }, $route);
     }
 
