@@ -55,6 +55,12 @@ class GateWayRouteRegistrar
             return stripos($target, $key) === 0 ? str_ireplace($key, $value, $target) : $target;
         }, $action);
 
+        $routes = Router::getRoutes();
+
+        if ($routes->hasNamedRoute($name)) {
+            return $routes->getByName($name)->uri();
+        }
+
         return $this->resolveRoute($name, $default);
     }
 
@@ -68,12 +74,6 @@ class GateWayRouteRegistrar
      */
     protected function resolveRoute(string $name, string $default = '{fallbackPlaceholder}'): string
     {
-        $routes = Router::getRoutes();
-
-        if ($routes->hasNamedRoute($name)) {
-            return $routes->getByName($name)->uri();
-        }
-
         $collect = collect(explode('.', $name));
         $collect = $collect->map(function ($item) {
             return Str::studly($item);
@@ -94,7 +94,7 @@ class GateWayRouteRegistrar
 
         try {
             $reflection = new ReflectionMethod($class, $method);
-            if ($reflection->isPublic()) {
+            if ($reflection->isPublic() && $reflection->getDeclaringClass()->getName() === $class) {
                 return Router::post($collect->map(function ($item) {
                     return Str::kebab($item);
                 })->implode('/'), $target)->name($name)->uri();
