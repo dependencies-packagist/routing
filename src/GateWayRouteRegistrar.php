@@ -19,29 +19,52 @@ class GateWayRouteRegistrar
         }, $route);
     }
 
+    protected function replace(string $search, string $replace, string $subject): string
+    {
+        $pos = strpos($subject, $search);
+
+        if ($pos === false) {
+            return $subject;
+        }
+
+        return substr_replace($subject, $replace, $pos, strlen($search));
+    }
+
     public function gateway(string $endpoint = 'gateway.do', callable $action = null, callable $version = null): Route
     {
-        return Router::any($endpoint, function (Request $request) use ($action, $version) {
+        return Router::any($endpoint, function (Request $request) use ($endpoint, $action, $version) {
             $action  = app()->call($action ?? fn() => $request->input('action'));
             $version = app()->call($version ?? fn() => $request->input('version'));
             $uri     = $this->getRouteByName($action, $version, $default = '{fallbackPlaceholder}');
             $method  = $uri == $default ? 'GET' : $request->getMethod();
             $uri     = $this->replaceRouteParameters($uri, $request);
+            $uri     = $this->replace("/{$endpoint}", "/{$uri}", $request->getUri());
             // 将 SymfonyRequest 转换为 Request 实例
-            $request = Request::createFromBase(SymfonyRequest::create(
-                $uri,
-                $method,
-                $request->all(),
-                $request->cookies->all(),
-                $request->files->all(),
-                $request->server->all(),
-                $request->getContent()
+            $newRequest = Request::createFromBase(SymfonyRequest::create(
+                uri: $uri,
+                method: $method,
+                cookies: $request->cookies->all(),
+                files: $request->files->all(),
+                server: $request->server->all(),
+                content: $request->getContent()
             ));
+            foreach ($request->query->all() as $key => $value) {
+                $newRequest->query->set($key, $value);
+            }
+            foreach ($request->request->all() as $key => $value) {
+                $newRequest->request->set($key, $value);
+            }
+            foreach ($request->attributes->all() as $key => $value) {
+                $newRequest->attributes->set($key, $value);
+            }
             // 将新的 Request 实例绑定到服务容器
-            app()->instance(Request::class, $request);
+            app()->instance(Request::class, $newRequest);
             //使用路由器来分发子请求
-            return Router::dispatch($request);
-        })->middleware(config('routing.gateway_middleware', []))->name('gateway');
+            return Router::dispatch($newRequest);
+        })
+            ->middleware(config('routing.gateway.middleware', []))
+            ->withoutMiddleware(config('routing.gateway.excluded_middleware', []))
+            ->name('gateway');
     }
 
     protected function getRouteByName(string $action = null, string $version = null, string $default = '{fallbackPlaceholder}'): string
@@ -81,12 +104,12 @@ class GateWayRouteRegistrar
         $count   = $collect->count();
         $target  = $collect->implode(function ($value, $key) use ($count) {
             if ($key === 0) {
-                return app()->getNamespace() . 'Http\\Controllers\\' . $value . '\\';
+                return app()->getNamespace().'Http\\Controllers\\'.$value.'\\';
             }
             return match ($count - $key) {
                 1 => lcfirst($value),
-                2 => $value . 'Controller' . '@',
-                default => $value . '\\'
+                2 => $value.'Controller'.'@',
+                default => $value.'\\'
             };
         });
 

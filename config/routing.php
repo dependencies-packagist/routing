@@ -96,12 +96,35 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Gateway Middleware
+    | Gateway Configurations
     |--------------------------------------------------------------------------
-    |
-    | This middleware will be applied to the gateway routes.
     |
     */
 
-    'gateway_middleware' => [],
+    'gateway' => [
+
+        /*
+        |--------------------------------------------------------------------------
+        | Middleware
+        |--------------------------------------------------------------------------
+        |
+        | This middleware will be applied to the gateway routes.
+        |
+        */
+
+        'middleware' => [],
+
+        /*
+        |--------------------------------------------------------------------------
+        | Excluded Middleware
+        |--------------------------------------------------------------------------
+        |
+        | Specify middleware that should be removed from all gateway routes.
+        |
+        */
+
+        'excluded_middleware' => [
+            'web',
+        ],
+    ],
 ];
