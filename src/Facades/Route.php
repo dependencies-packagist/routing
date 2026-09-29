@@ -2,14 +2,17 @@
 
 namespace Annotation\Routing\Facades;
 
+use Closure;
+use Annotation\Routing\Routing;
+use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route as Facade;
 
 /**
- * @method static void directories(array $directories)
- * @method static void gateway(string $endpoint = 'gateway.do', callable $action = null, callable $version = null)
+ * @method static void directories(array $directories = [])
+ * @method static \Illuminate\Routing\Route gateway(string $endpoint = 'gateway.do', Closure|null $action = null, Closure|null $version = null)
  *
- * @see \Annotation\Routing\Routing
- * @see \Illuminate\Routing\Router
+ * @mixin Routing
+ * @see Router
  */
 class Route extends Facade
 {

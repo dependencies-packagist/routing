@@ -1,5 +1,6 @@
 {
     "name": "annotation/routing",
+    "version": "3.0.1",
     "description": "Use PHP 8 attributes to register routes in a Laravel Application.",
     "keywords": [
         "route",
@@ -17,18 +18,21 @@
             "email": "jundayw@126.com"
         }
     ],
+    "provide": {
+        "annotation/route-implementation": "2.0"
+    },
     "require": {
         "php": "^8.0",
         "annotation/route": "^2.0",
         "reflective/reflection": "^3.0"
     },
+    "require-dev": {
+        "jundayw/composer-version-plugin": "^1.0"
+    },
     "autoload": {
         "psr-4": {
             "Annotation\\Routing\\": "src/"
         }
-    },
-    "provide": {
-        "annotation/route-implementation": "2.0"
     },
     "autoload-dev": {
         "psr-4": {
@@ -46,7 +50,10 @@
         }
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "jundayw/composer-version-plugin": true
+        }
     },
     "minimum-stability": "dev",
     "prefer-stable": true
