@@ -11,6 +11,7 @@ use Annotation\Route\Routing\Fallback;
 use Annotation\Route\ScopeBindings;
 use Annotation\Route\WithoutMiddleware;
 use Annotation\Route\WithTrashed;
+use Annotation\Routing\Attributes\Metadata;
 use Illuminate\Routing\Route;
 use Illuminate\Support\Str;
 use ReflectionAttribute;
@@ -20,11 +21,10 @@ use ReflectionMethod;
 class RouteMethodAttributes
 {
     public function __construct(
-        protected readonly ReflectionClass  $class,
-        protected readonly RouteAttributes  $routeAttributes,
+        protected readonly ReflectionClass $class,
+        protected readonly RouteAttributes $routeAttributes,
         protected readonly ReflectionMethod $method,
-    )
-    {
+    ) {
         //
     }
 
@@ -84,6 +84,21 @@ class RouteMethodAttributes
         $route->setDefaults(array_merge($this->routeAttributes->defaults(), $this->getAttribute(
             Defaults::class,
             static fn(Defaults $defaults, array $initial = []) => array_merge($initial, $defaults->toArray())
+        ) ?? []));
+
+        return $this;
+    }
+
+    /**
+     * @param Route $route
+     *
+     * @return static
+     */
+    public function setMetadataIfAvailable(Route $route): static
+    {
+        $route->setMetadata(array_merge($this->routeAttributes->metadata(), $this->getAttribute(
+            Metadata::class,
+            static fn(Metadata $defaults, array $initial = []) => array_merge($initial, $defaults->toArray())
         ) ?? []));
 
         return $this;

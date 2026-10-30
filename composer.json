@@ -1,6 +1,6 @@
 {
     "name": "annotation/routing",
-    "version": "3.0.1",
+    "version": "3.1.0",
     "description": "Use PHP 8 attributes to register routes in a Laravel Application.",
     "keywords": [
         "route",

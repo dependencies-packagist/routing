@@ -16,6 +16,7 @@ use Annotation\Route\Singleton;
 use Annotation\Route\Where;
 use Annotation\Route\WithoutMiddleware;
 use Annotation\Route\WithTrashed;
+use Annotation\Routing\Attributes\Metadata;
 use Illuminate\Support\Str;
 use ReflectionAttribute;
 use Reflective\Reflection\ReflectionClass;
@@ -24,8 +25,7 @@ class RouteAttributes
 {
     public function __construct(
         private readonly ReflectionClass $class,
-    )
-    {
+    ) {
         //
     }
 
@@ -76,7 +76,7 @@ class RouteAttributes
             return null;
         }
 
-        return str_replace('/', '.', trim($prefix, '/') . '/');
+        return str_replace('/', '.', trim($prefix, '/').'/');
     }
 
     public function domain(): ?string
@@ -275,6 +275,16 @@ class RouteAttributes
         return $this->getAttribute(
             Defaults::class,
             static fn(Defaults $attribute, mixed $defaults = []) => array_merge($defaults, [
+                $attribute->key => $attribute->value,
+            ])
+        ) ?? [];
+    }
+
+    public function metadata(): array
+    {
+        return $this->getAttribute(
+            Metadata::class,
+            static fn(Metadata $attribute, mixed $defaults = []) => array_merge($defaults, [
                 $attribute->key => $attribute->value,
             ])
         ) ?? [];

@@ -48,7 +48,7 @@ class RouteRegistrar
      */
     public function useRootNamespace(string $rootNamespace): self
     {
-        $this->rootNamespace = rtrim(str_replace('/', '\\', $rootNamespace), '\\') . '\\';
+        $this->rootNamespace = rtrim(str_replace('/', '\\', $rootNamespace), '\\').'\\';
 
         return $this;
     }
@@ -135,7 +135,7 @@ class RouteRegistrar
             Str::replaceLast('.php', '', $class)
         );
 
-        return $this->rootNamespace . $class;
+        return $this->rootNamespace.$class;
     }
 
     /**
@@ -176,10 +176,11 @@ class RouteRegistrar
     protected function registerRoutes(ReflectionClass $class, RouteAttributes $routeAttributes): void
     {
         $this->group($routeAttributes->getDefaultGroupAttribute(), function (Router $router) use ($class, $routeAttributes) {
-            if ($routeAttributes->isResourceContract()) {
-                return $this->getResourceRoutes($class, $routeAttributes);
-            }
-            return $router->group($routeAttributes->groups(), fn() => $this->getRoutes($class, $routeAttributes));
+            return $router->group($routeAttributes->groups(), function () use ($class, $routeAttributes) {
+                $routeAttributes->isResourceContract()
+                    ? $this->getResourceRoutes($class, $routeAttributes)
+                    : $this->getRoutes($class, $routeAttributes);
+            });
         });
     }
 
@@ -218,6 +219,7 @@ class RouteRegistrar
                     ->setWithTrashedIfAvailable($route)
                     ->setWheresIfAvailable($route)
                     ->setDefaultsIfAvailable($route)
+                    ->setMetadataIfAvailable($route)
                     ->setFallbackIfAvailable($route)
                     ->addMiddlewareToRoute($route, $attribute->getMiddleware())
                     ->addWithoutMiddlewareToRoute($route, $attribute->getWithoutMiddleware());
